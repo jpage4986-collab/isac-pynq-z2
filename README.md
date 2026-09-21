@@ -2,7 +2,7 @@
 
 面向结构微振动监测的 FPGA OFDM 通感一体化基带验证平台。
 
-当前状态：`bootstrap`，已建立仓库骨架和 PC 端黄金模型入口；尚未安装 Vivado，尚未生成 PYNQ Overlay。
+当前状态：`v0.1.0`，PC 端黄金模型环境已完成，GitHub 私有仓库已同步；Vivado 尚未安装，尚未生成 PYNQ Overlay。
 
 ## 目标
 
@@ -44,3 +44,5 @@ python -m pytest
 ## 当前可运行内容
 
 PC 端先验证相位到位移的数学约定和 2.40 Hz / 2.05 Hz 频率估计。运行 `python -m pytest` 可看到基础测试结果。RTL、Vivado 和 PYNQ 硬件闭环按 `docs/roadmap.md` 的阶段推进。
+
+远程仓库：<https://github.com/jpage4986-collab/isac-pynq-z2>
