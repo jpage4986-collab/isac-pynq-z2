@@ -1,0 +1,20 @@
+# Build a fresh PYNQ-Z2 bitstream from the repository RTL.
+set repo_root [file normalize [file join [file dirname [info script]] ..]]
+set build_root [file normalize [file join $repo_root .. build pynq_z2_hw]]
+set project_file [file join $build_root pynq_z2_hw.xpr]
+file mkdir $build_root
+
+create_project pynq_z2_hw $build_root -part xc7z020clg400-1 -force
+add_files [file join $repo_root fpga rtl isac_top.v]
+add_files [file join $repo_root fpga rtl qpsk_mapper.v]
+add_files -fileset constrs_1 [file join $repo_root fpga constraints pynq_z2.xdc]
+set_property top isac_top [current_fileset]
+update_compile_order -fileset sources_1
+
+launch_runs impl_1 -to_step write_bitstream -jobs 4
+wait_on_run impl_1
+set run_status [get_property STATUS [get_runs impl_1]]
+if {![string match {*Complete*} $run_status]} {
+    error "Implementation failed: $run_status"
+}
+puts "BITSTREAM=[file join $build_root pynq_z2_hw.runs impl_1 isac_top.bit]"
