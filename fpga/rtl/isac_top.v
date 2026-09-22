@@ -42,7 +42,9 @@ module isac_top (
     wire signed [15:0] cp_m_i, cp_m_q;
     wire rx_s_ready, rx_m_valid, rx_m_last;
     wire signed [15:0] rx_m_i, rx_m_q;
-    wire loopback_last = rx_m_valid && rx_m_last;
+    wire fft_s_ready, fft_m_valid, fft_m_last;
+    wire signed [15:0] fft_m_i, fft_m_q;
+    wire loopback_last = fft_m_valid && fft_m_last;
 
     // First hardware integration point: the slow counter supplies a repeating
     // four-symbol stream to the QPSK mapper. The LED combines the heartbeat
@@ -70,8 +72,15 @@ module isac_top (
         .clk(clk), .rst(rst),
         .s_axis_tvalid(cp_m_valid), .s_axis_tready(rx_s_ready),
         .s_axis_i(cp_m_i), .s_axis_q(cp_m_q),
-        .m_axis_tready(1'b1), .m_axis_tvalid(rx_m_valid),
+        .m_axis_tready(fft_s_ready), .m_axis_tvalid(rx_m_valid),
         .m_axis_tlast(rx_m_last), .m_axis_i(rx_m_i), .m_axis_q(rx_m_q)
+    );
+    fft64_axis_wrapper u_fft64 (
+        .clk(clk), .rst(rst),
+        .s_valid(rx_m_valid), .s_ready(fft_s_ready), .s_last(rx_m_last),
+        .s_i(rx_m_i), .s_q(rx_m_q),
+        .m_valid(fft_m_valid), .m_ready(1'b1), .m_last(fft_m_last),
+        .m_i(fft_m_i), .m_q(fft_m_q)
     );
 
     always @(posedge clk) begin

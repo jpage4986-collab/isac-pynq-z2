@@ -9,6 +9,10 @@ add_files [file join $repo_root fpga rtl isac_top.v]
 add_files [file join $repo_root fpga rtl qpsk_mapper.v]
 add_files [file join $repo_root fpga rtl cp_insert_axis.v]
 add_files [file join $repo_root fpga rtl cp_remove_axis.v]
+add_files [file join $repo_root fpga rtl fft64_axis_wrapper.v]
+create_ip -name xfft -vendor xilinx.com -library ip -version 9.1 -module_name xfft_64
+set_property -dict [list CONFIG.transform_length {64} CONFIG.input_width {16} CONFIG.output_ordering {natural_order} CONFIG.throttle_scheme {nonrealtime} CONFIG.scaling_options {scaled} CONFIG.data_format {fixed_point} CONFIG.run_time_configurable_transform_length {false}] [get_ips xfft_64]
+generate_target all [get_ips xfft_64]
 add_files -fileset constrs_1 [file join $repo_root fpga constraints pynq_z2.xdc]
 set_property top isac_top [current_fileset]
 update_compile_order -fileset sources_1
