@@ -23,3 +23,5 @@ results/large/
 *.tmp
 *.bak
 Thumbs.db
+
+sim/
