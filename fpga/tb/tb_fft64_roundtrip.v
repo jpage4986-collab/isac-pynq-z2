@@ -15,20 +15,30 @@ module tb_fft64_roundtrip;
     wire fft_valid, fft_last;
     wire signed [15:0] fft_i, fft_q;
     integer k, out_count = 0, expected;
-    integer board_frames = 0;
     reg roundtrip_done = 1'b0;
     wire led0, led1, led2, led3;
+    wire fault_sticky;
+    wire [31:0] fault_bits, fault_errors;
+    wire inject_one_error = u_board_top.fft_valid &&
+                            u_board_top.u_checker.data_frame &&
+                            (u_board_top.u_checker.data_frame_count == 0) &&
+                            (u_board_top.u_checker.bin_index == 6'd1);
+    wire signed [15:0] fault_i = inject_one_error ? -u_board_top.fft_i : u_board_top.fft_i;
 
     always #4 clk = ~clk;
-
-    always @(posedge clk)
-        if (!rst && u_board_top.fft_m_valid && u_board_top.fft_m_last)
-            board_frames = board_frames + 1;
 
     // Exercise the exact board top and its result checker as well.
     isac_top u_board_top (
         .clk(clk), .btn0(rst),
         .led0(led0), .led1(led1), .led2(led2), .led3(led3)
+    );
+    ofdm_frame_checker u_fault_checker (
+        .clk(clk), .rst(rst),
+        .s_valid(u_board_top.fft_valid), .s_last(u_board_top.fft_last),
+        .s_i(fault_i), .s_q(u_board_top.fft_q),
+        .frame_seen(), .data_frame_seen(), .last_frame_ok(),
+        .sticky_error(fault_sticky), .frame_count(), .data_frame_count(),
+        .bit_count(fault_bits), .bit_errors(fault_errors)
     );
 
     fft64_axis_wrapper #(.INVERSE(1'b1)) u_ifft (
@@ -87,10 +97,17 @@ module tb_fft64_roundtrip;
     end
 
     initial begin
-        wait (roundtrip_done && board_frames >= 4);
+        wait (roundtrip_done && u_board_top.data_frame_count >= 4);
+        @(negedge clk);
         if (!led1 || led3)
             $fatal(1, "Board checker failed: pass=%b frame_seen=%b error=%b", led1, led2, led3);
-        $display("PASS full OFDM loopback and board checker: IFFT, CP insert/remove, FFT, 64 bins, TLAST, %0d board frames", board_frames);
+        if (u_board_top.bit_count !== 32'd384 || u_board_top.bit_errors !== 32'd0)
+            $fatal(1, "QPSK BER mismatch: bits=%0d errors=%0d", u_board_top.bit_count, u_board_top.bit_errors);
+        if (!fault_sticky || fault_bits !== 32'd384 || fault_errors !== 32'd1)
+            $fatal(1, "Injected error was not counted once: bits=%0d errors=%0d sticky=%b",
+                   fault_bits, fault_errors, fault_sticky);
+        $display("PASS QPSK OFDM: 4 data frames, %0d bits, %0d errors; primitive FFT/CP roundtrip passed",
+                 u_board_top.bit_count, u_board_top.bit_errors);
         $finish;
     end
 

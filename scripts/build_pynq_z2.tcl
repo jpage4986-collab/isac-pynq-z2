@@ -6,6 +6,8 @@ file mkdir $build_root
 
 create_project pynq_z2_hw $build_root -part xc7z020clg400-1 -force
 add_files [file join $repo_root fpga rtl isac_top.v]
+add_files [file join $repo_root fpga rtl ofdm_frame_source.v]
+add_files [file join $repo_root fpga rtl ofdm_frame_checker.v]
 add_files [file join $repo_root fpga rtl qpsk_mapper.v]
 add_files [file join $repo_root fpga rtl cp_insert_axis.v]
 add_files [file join $repo_root fpga rtl cp_remove_axis.v]
