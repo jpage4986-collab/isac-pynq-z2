@@ -5,13 +5,17 @@ import numpy as np
 from model.ofdm import (
     OFDMConfig,
     apply_common_phase_channel,
+    apply_multipath_channel,
     build_tx_frame,
     correct_common_phase,
     estimate_common_phase,
+    estimate_channel_from_training,
     extract_data_bits,
+    equalize_frequency_response,
     ofdm_demodulate,
     ofdm_modulate,
     qpsk_demod,
+    bit_error_rate,
     qpsk_mod,
     vibration_trace,
 )
@@ -57,3 +61,20 @@ def test_phase_correction_recovers_bits_with_noise() -> None:
     corrected = correct_common_phase(rx_grid, estimated_phase)
     recovered = extract_data_bits(corrected, config)
     assert np.mean(recovered != bits) < 0.01
+
+
+def test_training_equalizer_handles_multipath_and_noise() -> None:
+    config = OFDMConfig(n_data_symbols=16)
+    rng = np.random.default_rng(20260922)
+    bits = rng.integers(0, 2, config.n_bits_per_frame, dtype=np.uint8)
+    tx_grid = build_tx_frame(bits, config)
+    phase = np.linspace(-0.4, 0.4, config.n_ofdm_symbols)
+    taps = np.array([1.0 + 0.0j, 0.35 * np.exp(1j * 0.6), 0.15j])
+    rx_grid = apply_multipath_channel(tx_grid, phase, config, taps=taps, snr_db=30.0, rng=rng)
+    channel = estimate_channel_from_training(rx_grid, tx_grid, config)
+    equalized = equalize_frequency_response(rx_grid, channel)
+    residual_phase = estimate_common_phase(equalized, tx_grid, config)
+    corrected = correct_common_phase(equalized, residual_phase)
+    recovered = extract_data_bits(corrected, config)
+    assert bit_error_rate(bits, recovered) < 0.01
+

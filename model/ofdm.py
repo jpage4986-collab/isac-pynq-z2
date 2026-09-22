@@ -181,3 +181,74 @@ def vibration_trace(
     t = np.arange(config.n_ofdm_symbols, dtype=float) / symbol_rate_hz
     displacement = amplitude_m * np.sin(2.0 * np.pi * frequency_hz * t + phase0_rad)
     return t, displacement, phase_from_displacement(displacement)
+
+
+def multipath_frequency_response(
+    taps: np.ndarray | Iterable[complex], config: OFDMConfig
+) -> np.ndarray:
+    """Return the FFT-bin response of a short discrete-time multipath channel."""
+    h = np.asarray(tuple(taps) if not isinstance(taps, np.ndarray) else taps, dtype=np.complex128)
+    if h.ndim != 1 or h.size == 0 or h.size > config.cp_len:
+        raise ValueError("taps must be a non-empty 1-D array no longer than cp_len")
+    return np.fft.fft(np.pad(h, (0, config.n_fft - h.size)))
+
+
+def apply_multipath_channel(
+    tx_grid: np.ndarray,
+    phase_rad: np.ndarray,
+    config: OFDMConfig,
+    taps: np.ndarray | Iterable[complex] = (1.0 + 0.0j,),
+    snr_db: float | None = None,
+    rng: np.random.Generator | None = None,
+) -> np.ndarray:
+    """Apply a short multipath response plus a per-symbol structural phase."""
+    tx = np.asarray(tx_grid, dtype=np.complex128)
+    if tx.ndim != 2 or tx.shape[1] != config.n_fft:
+        raise ValueError("tx_grid must have shape (symbols, n_fft)")
+    response = multipath_frequency_response(taps, config)
+    rx = tx * response[None, :] * np.exp(1j * np.asarray(phase_rad)[:, None])
+    if snr_db is not None:
+        generator = np.random.default_rng() if rng is None else rng
+        power = float(np.mean(np.abs(rx) ** 2))
+        noise_power = power / (10.0 ** (snr_db / 10.0))
+        noise = np.sqrt(noise_power / 2.0) * (
+            generator.standard_normal(rx.shape) + 1j * generator.standard_normal(rx.shape)
+        )
+        rx = rx + noise
+    return rx
+
+
+def estimate_channel_from_training(
+    rx_grid: np.ndarray, tx_grid: np.ndarray, config: OFDMConfig
+) -> np.ndarray:
+    """Estimate the static frequency response from the first known symbol."""
+    rx = np.asarray(rx_grid, dtype=np.complex128)
+    tx = np.asarray(tx_grid, dtype=np.complex128)
+    if rx.shape != tx.shape or rx.shape[1] != config.n_fft:
+        raise ValueError("rx_grid and tx_grid must have matching frame shapes")
+    channel = np.ones(config.n_fft, dtype=np.complex128)
+    active = config.indices(config.active_bins)
+    if np.any(np.abs(tx[0, active]) < 1e-12):
+        raise ValueError("training symbol must be non-zero on active bins")
+    channel[active] = rx[0, active] / tx[0, active]
+    return channel
+
+
+def equalize_frequency_response(rx_grid: np.ndarray, channel: np.ndarray) -> np.ndarray:
+    """Equalize active subcarriers with a known or estimated response."""
+    rx = np.asarray(rx_grid, dtype=np.complex128)
+    h = np.asarray(channel, dtype=np.complex128)
+    if rx.ndim != 2 or h.ndim != 1 or rx.shape[1] != h.size:
+        raise ValueError("channel must have one coefficient per FFT bin")
+    if np.any(np.abs(h) < 1e-12):
+        raise ValueError("channel contains an un-equalizable zero")
+    return rx / h[None, :]
+
+
+def bit_error_rate(reference: np.ndarray, estimate: np.ndarray) -> float:
+    """Return the fraction of unequal bits."""
+    a = np.asarray(reference, dtype=np.uint8)
+    b = np.asarray(estimate, dtype=np.uint8)
+    if a.shape != b.shape or a.ndim != 1:
+        raise ValueError("reference and estimate must be matching 1-D arrays")
+    return float(np.mean(a != b))
