@@ -2,7 +2,7 @@
 
 面向结构微振动监测的 FPGA OFDM 通感一体化基带验证平台。
 
-当前状态：`v0.1.0`，PC 端黄金模型环境已完成，GitHub 私有仓库已同步；Vivado 尚未安装，尚未生成 PYNQ Overlay。
+当前状态：阶段 2，PYNQ-Z2 LED 硬件验收和 Python OFDM 黄金模型已通过测试；尚未生成 PYNQ Overlay。
 
 ## 目标
 
@@ -13,7 +13,7 @@
 ## 目录
 
 - `model/`：浮点黄金模型和参数定义
-- `rtl/`：可综合 RTL（后续按模块加入）
+- `fpga/rtl/`：可综合 RTL（后续按模块加入）
 - `tb/`：仿真测试
 - `ip/`、`constraints/`、`vivado/`：Vivado 工程源与约束
 - `pynq/`：Overlay 加载、寄存器、DMA 和 Notebook
@@ -24,14 +24,14 @@
 ## Windows 快速开始
 
 ```powershell
-cd C:\Users\28185\Documents\Codex\2026-09-21\w\isac-pynq-z2
+cd D:\\pynqz2\\isac-pynq-z2
 Set-ExecutionPolicy -Scope Process Bypass
 .\scripts\setup_pc.ps1
 .\.venv\Scripts\Activate.ps1
 python -m pytest
 ```
 
-以后迁移到 D 盘时，只需把整个仓库复制到例如 `D:\fpga\isac-pynq-z2`，在新目录重新运行 `setup_pc.ps1`。Vivado 安装路径由环境变量 `XILINX_VIVADO` 指定，默认建议 `D:\AMD\Vivado\2024.1`。
+Vivado 安装路径由环境变量 `XILINX_VIVADO` 指定；当前使用 `D:\\pynqz2\\tools\\Vivado\\2024.1`。
 
 ## 接力规则
 
@@ -46,3 +46,4 @@ python -m pytest
 PC 端先验证相位到位移的数学约定和 2.40 Hz / 2.05 Hz 频率估计。运行 `python -m pytest` 可看到基础测试结果。RTL、Vivado 和 PYNQ 硬件闭环按 `docs/roadmap.md` 的阶段推进。
 
 远程仓库：<https://github.com/jpage4986-collab/isac-pynq-z2>
+
