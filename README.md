@@ -2,7 +2,7 @@
 
 面向结构微振动监测的 FPGA OFDM 通感一体化基带验证平台。
 
-当前状态：阶段 15，已在 64 点 IFFT/FFT 与 16 点循环前缀的板内回环上接入交替训练/QPSK 帧、4 个导频和 PL 误码计数器。详细操作见 [QPSK 回环说明](docs/qpsk-ofdm-loopback.md)。尚未生成 PYNQ Overlay，也未接入数字回波信道、射频或真实振动信号。
+当前状态：阶段 16，已在 64 点 IFFT/FFT 与 16 点循环前缀的板内回环上接入交替训练/QPSK 帧、4 个导频和 PL 误码计数器；还可用 [USB-JTAG/ILA 读取四个计数器](docs/jtag-counter-readout.md)。尚未生成 PYNQ Overlay，也未接入数字回波信道、射频或真实振动信号。
 
 ## 目标
 
@@ -31,7 +31,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 python -m pytest
 ```
 
-当前 Vivado 2024.1 安装在 `D:\pynqz2\tools\Vivado\2024.1\Vivado\2024.1`。`scripts/build_pynq_z2.tcl` 可从 RTL 重建 bitstream，`scripts/program_pynq_z2.tcl` 可通过 JTAG 下载到已连接的板。
+当前 Vivado 2024.1 安装在 `D:\pynqz2\tools\Vivado\2024.1\Vivado\2024.1`。`scripts/build_pynq_z2.tcl` 可从 RTL 重建普通 bitstream，`scripts/program_pynq_z2.tcl` 可通过 JTAG 下载到已连接的板。要从电脑读取板内计数器，运行 `scripts/build_jtag_counters.tcl`、`scripts/capture_jtag_counters.tcl` 和 `scripts/summarize_counter_capture.py`。
 
 ## 接力规则
 
@@ -43,6 +43,6 @@ python -m pytest
 
 ## 当前可运行内容
 
-PC 端的 OFDM 黄金模型和相位到位移测试可用 `python -m pytest` 验证。FPGA 端已完成交替训练/QPSK 数据帧的无噪声通信回环，并用 XSim 检查帧尾、定点频点值和 PL 误码统计。数字信道、带噪声 BER 曲线、信道估计/均衡、PS/DMA 和真实感知仍是后续工作。
+PC 端的 OFDM 黄金模型和相位到位移测试可用 `python -m pytest` 验证。FPGA 端已完成交替训练/QPSK 数据帧的无噪声通信回环，并用 XSim 检查帧尾、定点频点值和 PL 误码统计。ILA 实板采集到 2 个数据帧、192 bit、0 误码。数字信道、带噪声 BER 曲线、信道估计/均衡、PS/DMA 和真实感知仍是后续工作。
 
 远程仓库：<https://github.com/jpage4986-collab/isac-pynq-z2>
