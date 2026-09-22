@@ -5,6 +5,7 @@
 - 输入：频域第 1、63 点 I=16384，其余点为 0；循环发送 64 点帧。
 - 输出检查：每帧 64 个点，两个目标点 I≈256，其余 I≈0，Q≈0，容差 ±32，同时检查 TLAST。
 - LED0 心跳；LED1 最近一帧通过；LED2 已收到完整帧；LED3 自 BTN0 复位以来出现过任何不匹配。
-- 本阶段的仿真命令：`scripts/run_fft_roundtrip_sim.tcl`；构建命令：`scripts/build_pynq_z2.tcl`；烧录命令：`scripts/program_pynq_z2.tcl`。XSim 完整链路和顶层检查器已通过；PC 端 pytest 11/11 通过。构建与烧录结果以本阶段最终验证记录为准。
+- 本阶段的仿真命令：`scripts/run_fft_roundtrip_sim.tcl`；构建命令：`scripts/build_pynq_z2.tcl`；烧录命令：`scripts/program_pynq_z2.tcl`。XSim 完整链路与顶层检查器连续 4 帧通过；PC 端 pytest 11/11 通过；Vivado bitstream 生成成功，DRC 0 错误、布线后 WNS +2.039 ns；JTAG 已下载，设备启动状态 HIGH。
+- 仍待板上肉眼确认 LED1、LED2 常亮且 LED3 熄灭；JTAG 成功不等于已经观察到 LED 结果。
 - 当前限制：仍是 PL 内部确定性测试信号，无数字信道、训练符号、PS/DMA、射频或微振动测量。JTAG 下载的 bitstream 断电后不保存。
 - 下一步：把两点固定频谱扩展为可重复的训练符号与 QPSK 数据帧，加入可控数字延迟/相位信道；先仿真再上板。
