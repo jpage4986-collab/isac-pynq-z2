@@ -48,10 +48,9 @@ module isac_top (
     );
 
     always @(posedge clk) begin
-        if (!rst_n)
-            counter <= 27'd0;
-        else
-            counter <= counter + 1'b1;
+        // Keep the visible heartbeat independent of the push-button level.
+        // This also makes board bring-up robust when BTN0 is held or floating.
+        counter <= counter + 1'b1;
     end
 
     assign led0 = ~counter[26] ^ (i_symbol[15] ^ q_symbol[15]);
