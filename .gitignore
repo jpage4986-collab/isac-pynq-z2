@@ -25,3 +25,7 @@ results/large/
 Thumbs.db
 
 sim/
+vivado*.log
+vivado*.jou
+vivado_*.backup.log
+vivado_*.backup.jou
