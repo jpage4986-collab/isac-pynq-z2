@@ -2,7 +2,7 @@
 
 面向结构微振动监测的 FPGA OFDM 通感一体化基带验证平台。
 
-当前状态：阶段 2，PYNQ-Z2 LED 硬件验收和 Python OFDM 黄金模型已通过测试；尚未生成 PYNQ Overlay。
+当前状态：阶段 14，64 点 IFFT/FFT 与 16 点循环前缀的板内数字基带回环已集成；四个 PL LED 分别显示心跳、最近一帧通过、收到完整帧和历史错误。详细操作见 [板上回环说明](docs/board-loopback-stage14.md)。尚未生成 PYNQ Overlay，也未接入射频或真实振动信号。
 
 ## 目标
 
@@ -14,8 +14,8 @@
 
 - `model/`：浮点黄金模型和参数定义
 - `fpga/rtl/`：可综合 RTL（后续按模块加入）
-- `tb/`：仿真测试
-- `ip/`、`constraints/`、`vivado/`：Vivado 工程源与约束
+- `fpga/tb/`：RTL 仿真测试
+- `fpga/constraints/`：PYNQ-Z2 引脚与时钟约束；XFFT IP 由脚本生成
 - `pynq/`：Overlay 加载、寄存器、DMA 和 Notebook
 - `scripts/`：环境检查、模型测试、Vivado 构建入口
 - `docs/`：接口、定点、实验和交接文档
@@ -24,14 +24,14 @@
 ## Windows 快速开始
 
 ```powershell
-cd D:\\pynqz2\\isac-pynq-z2
+cd D:\pynqz2\isac-pynq-z2
 Set-ExecutionPolicy -Scope Process Bypass
 .\scripts\setup_pc.ps1
 .\.venv\Scripts\Activate.ps1
 python -m pytest
 ```
 
-Vivado 安装路径由环境变量 `XILINX_VIVADO` 指定；当前使用 `D:\\pynqz2\\tools\\Vivado\\2024.1`。
+当前 Vivado 2024.1 安装在 `D:\pynqz2\tools\Vivado\2024.1\Vivado\2024.1`。`scripts/build_pynq_z2.tcl` 可从 RTL 重建 bitstream，`scripts/program_pynq_z2.tcl` 可通过 JTAG 下载到已连接的板。
 
 ## 接力规则
 
@@ -43,7 +43,7 @@ Vivado 安装路径由环境变量 `XILINX_VIVADO` 指定；当前使用 `D:\\py
 
 ## 当前可运行内容
 
-PC 端先验证相位到位移的数学约定和 2.40 Hz / 2.05 Hz 频率估计。运行 `python -m pytest` 可看到基础测试结果。RTL、Vivado 和 PYNQ 硬件闭环按 `docs/roadmap.md` 的阶段推进。
+PC 端的 OFDM 黄金模型和相位到位移测试可用 `python -m pytest` 验证。FPGA 端已完成确定性双频点 OFDM 回环，并用 XSim 检查 IFFT、CP 插入/去除、FFT 的数值和帧尾。数字信道、QPSK 数据帧、PS/DMA 和真实感知仍是后续工作。
 
 远程仓库：<https://github.com/jpage4986-collab/isac-pynq-z2>
 

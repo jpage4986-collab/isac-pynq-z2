@@ -2,7 +2,9 @@
 // Thin ready/valid wrapper around the Vivado XFFT 9.1 64-point core.
 // Complex samples are exposed as separate signed I/Q channels; the XFFT
 // native 32-bit stream packs {imaginary, real}.
-module fft64_axis_wrapper (
+module fft64_axis_wrapper #(
+    parameter INVERSE = 1'b0
+) (
     input  wire clk,
     input  wire rst,
     input  wire s_valid,
@@ -19,7 +21,9 @@ module fft64_axis_wrapper (
     reg config_sent;
     wire config_valid = !config_sent;
     wire config_ready;
-    wire [7:0] config_data = 8'h01; // forward transform, scaled schedule default
+    // SCALE_SCH = [2,2,2] => six right shifts across three radix-4 stages
+    // (1/64 total). FWD_INV occupies bit 0; SCALE_SCH occupies bits [6:1].
+    wire [7:0] config_data = INVERSE ? 8'h54 : 8'h55;
     wire [31:0] fft_in = {s_q, s_i};
     wire [31:0] fft_out;
     wire fft_in_ready;
@@ -37,6 +41,7 @@ module fft64_axis_wrapper (
 
     xfft_64 u_xfft (
         .aclk(clk),
+        .aresetn(~rst),
         .s_axis_config_tdata(config_data),
         .s_axis_config_tvalid(config_valid),
         .s_axis_config_tready(config_ready),
