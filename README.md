@@ -2,7 +2,7 @@
 
 面向结构微振动监测的 FPGA OFDM 通感一体化基带验证平台。
 
-当前状态：阶段 14，64 点 IFFT/FFT 与 16 点循环前缀的板内数字基带回环已集成；四个 PL LED 分别显示心跳、最近一帧通过、收到完整帧和历史错误。详细操作见 [板上回环说明](docs/board-loopback-stage14.md)。尚未生成 PYNQ Overlay，也未接入射频或真实振动信号。
+当前状态：阶段 15，已在 64 点 IFFT/FFT 与 16 点循环前缀的板内回环上接入交替训练/QPSK 帧、4 个导频和 PL 误码计数器。详细操作见 [QPSK 回环说明](docs/qpsk-ofdm-loopback.md)。尚未生成 PYNQ Overlay，也未接入数字回波信道、射频或真实振动信号。
 
 ## 目标
 
@@ -43,7 +43,6 @@ python -m pytest
 
 ## 当前可运行内容
 
-PC 端的 OFDM 黄金模型和相位到位移测试可用 `python -m pytest` 验证。FPGA 端已完成确定性双频点 OFDM 回环，并用 XSim 检查 IFFT、CP 插入/去除、FFT 的数值和帧尾。数字信道、QPSK 数据帧、PS/DMA 和真实感知仍是后续工作。
+PC 端的 OFDM 黄金模型和相位到位移测试可用 `python -m pytest` 验证。FPGA 端已完成交替训练/QPSK 数据帧的无噪声通信回环，并用 XSim 检查帧尾、定点频点值和 PL 误码统计。数字信道、带噪声 BER 曲线、信道估计/均衡、PS/DMA 和真实感知仍是后续工作。
 
 远程仓库：<https://github.com/jpage4986-collab/isac-pynq-z2>
-
