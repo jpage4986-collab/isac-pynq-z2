@@ -1,9 +1,10 @@
 # 当前接力记录
 
-- 阶段：18，在独立训练帧感知链中实现固定 5 点数字回波的信道估计、距离 IFFT 与峰值检测。
+- 阶段：19，已把通信和感知接到同一条交替训练/QPSK OFDM 接收流中，并完成 PYNQ-Z2 的 ILA 实板验收。
 - 数据帧采用 52 个有效子载波，其中 4 个固定导频、48 个 Gray QPSK 数据子载波；固定 LFSR 种子为 `16'hACE1`，每个数据帧产生 96 bit。
 - PL 检查器比较训练/导频幅值、保护带、帧尾和 QPSK 硬判决，累积帧数、总比特数和误码数。LED0 心跳、LED1 数据帧通过、LED2 收到完整帧、LED3 历史错误。
-- 验证：5 点延迟模块的 80 点帧、TLAST 和背压 XSim 通过；IFFT → CP → 延迟 → 去 CP → FFT 仿真在第 1 子载波得到约 `(226,-121)` 的预期相位；完整训练帧链的 XSim 报告峰值为 bin 5、强度 13318。Python 稀疏训练载波距离像同样在第 5 格达峰，累计 Python 测试为 13 项。PYNQ-Z2 上带 ILA 的 range demo 已实际编程并采集 1024 个样本：全部 `range_frame_valid=1`、`peak_bin=5`、`peak_magnitude=13318`；125 MHz 时序 WNS 为 0.234 ns。阶段 16 的 ILA 通信回环读数仍有效。
-- 板端：`range_demo_top` 只发送已知训练帧，并在 PL 内注入 5 点数字目标；构建/下载脚本为 `scripts/build_range_demo.tcl` 与 `scripts/program_range_demo.tcl`。LED0 心跳，LED1 有完整距离像，LED2 表示峰值=5 且足够强，LED3 表示该固定验收失败。
-- 当前限制：这条感知链使用板内固定数字目标，与交替训练/QPSK 通信顶层分开；尚无可变目标门、载波相位振动、噪声、同步、均衡、PS/AXI 和 DMA。
-- 下一步：为 range demo 加 JTAG/ILA 实测读数，再把训练帧感知支路与通信帧调度合并，随后实现目标门后的慢时间相位与位移链。
+- 验证：5 点延迟模块的 80 点帧、TLAST 和背压 XSim 通过；IFFT → CP → 延迟 → 去 CP → FFT 仿真在第 1 子载波得到约 `(226,-121)` 的预期相位。新的同链 `tb_isac_integrated` 报告 `bits=96 errors=0 peak_bin=5 magnitude=13318`，PC 端累计 14 项测试通过。普通综合实现的 125 MHz WNS 为 0.097 ns；带 ILA 实现的 WNS 为 0.249 ns，二者 TNS 均为 0。
+- 板端：`isac_integrated_top` 交替发射已知训练帧和 QPSK 数据帧，经同一个板内 5 点数字目标。接收 FFT 后训练帧走 `H=Y/X`/距离 IFFT 支路，数据帧走 Q14 相位均衡/QPSK 硬判决支路。实际 ILA 采集 1024 点：`frame_count=398585`、`data_frame_count=199292`、`bit_count=19132076`、`bit_errors=0`，全部点都有 `range_frame_valid=1`、`peak_bin=5`、`peak_magnitude=13318`。脚本为 `scripts/build_integrated_demo_jtag.tcl`、`scripts/capture_integrated_demo_jtag.tcl`、`scripts/summarize_integrated_capture.py`。
+- LED：LED0 心跳；LED1 表示数据帧已到达且累计 0 误码；LED2 表示同一条流上的训练帧稳定测到第 5 个距离格；LED3 表示通信或测距验收失败。
+- 当前限制：目标仍是固定 5 点、固定相位的板内数字回波；尚无慢时间可变相位、位移/频谱、数字多目标/噪声、PS/AXI 和 DMA。
+- 下一步：在同一数字目标上加入 100 Hz 慢时间微振动相位，输出相位增量、位移和频谱峰值；再以 PC 黄金模型、噪声/BER 扫描、PYNQ 采集接口和最终报告完成平台。
