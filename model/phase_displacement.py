@@ -14,14 +14,18 @@ def displacement_from_phase(phase_rad: np.ndarray | float) -> np.ndarray:
     """Inverse mapping for the same convention."""
     return -WAVELENGTH_M * np.asarray(phase_rad) / (4.0 * np.pi)
 
-def recover_incremental_displacement(z: np.ndarray, reference_m: float = 0.0) -> np.ndarray:
+def recover_incremental_displacement(
+    z: np.ndarray, reference_m: float = 0.0, carrier_hz: float = CARRIER_HZ
+) -> np.ndarray:
     """Recover relative displacement from target-gate complex samples."""
     z = np.asarray(z, dtype=np.complex128)
     if z.ndim != 1 or z.size == 0:
         raise ValueError("z must be a non-empty one-dimensional complex array")
     increments = np.angle(z[1:] * np.conj(z[:-1]))
     phase = np.concatenate(([0.0], np.cumsum(increments)))
-    return reference_m + displacement_from_phase(phase)
+    if carrier_hz <= 0.0 or not np.isfinite(carrier_hz):
+        raise ValueError("carrier_hz must be finite and positive")
+    return reference_m - C_LIGHT * phase / (4.0 * np.pi * carrier_hz)
 
 def dominant_frequency(signal: np.ndarray, sample_rate_hz: float = 100.0) -> float:
     """Estimate a dominant non-DC frequency using an rFFT peak bin."""

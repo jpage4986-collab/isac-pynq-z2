@@ -1,0 +1,68 @@
+{
+  "model": "digital_ofdm_shared_channel",
+  "seed": 42,
+  "carrier_hz": 5800000000.0,
+  "slow_rate_hz": 100.0,
+  "target_delay_bin": 5,
+  "target_vibration_amplitude_um": 500.0,
+  "sensing_snr_db": 30.0,
+  "ber_sweep_slow_samples": 1024,
+  "targets": [
+    {
+      "input_frequency_hz": 2.4,
+      "estimated_frequency_hz": 2.392578125,
+      "displacement_rmse_um": 20.304608731496344,
+      "correct_range_peak_fraction": 1.0,
+      "slow_samples": 4096
+    },
+    {
+      "input_frequency_hz": 2.05,
+      "estimated_frequency_hz": 2.05078125,
+      "displacement_rmse_um": 16.782360244139316,
+      "correct_range_peak_fraction": 1.0,
+      "slow_samples": 4096
+    }
+  ],
+  "ber_sweep": [
+    {
+      "snr_db": 0,
+      "bit_errors": 34289,
+      "bit_count": 98304,
+      "ber": 0.3488057454427083
+    },
+    {
+      "snr_db": 5,
+      "bit_errors": 13440,
+      "bit_count": 98304,
+      "ber": 0.13671875
+    },
+    {
+      "snr_db": 10,
+      "bit_errors": 1615,
+      "bit_count": 98304,
+      "ber": 0.016428629557291668
+    },
+    {
+      "snr_db": 15,
+      "bit_errors": 4,
+      "bit_count": 98304,
+      "ber": 4.0690104166666664e-05
+    },
+    {
+      "snr_db": 20,
+      "bit_errors": 0,
+      "bit_count": 98304,
+      "ber": 0.0
+    },
+    {
+      "snr_db": 30,
+      "bit_errors": 0,
+      "bit_count": 98304,
+      "ber": 0.0
+    }
+  ],
+  "limits": {
+    "frequency_error_hz": 0.05,
+    "displacement_rmse_um": 50.0
+  }
+}
