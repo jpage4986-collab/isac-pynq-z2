@@ -278,6 +278,26 @@ def range_profile(channel: np.ndarray) -> np.ndarray:
     return np.fft.ifft(response)
 
 
+def range_profile_from_training(
+    rx_grid: np.ndarray, tx_grid: np.ndarray, config: OFDMConfig
+) -> np.ndarray:
+    """Form a sparse channel estimate from the training symbol, then IFFT it.
+
+    Only the 52 active OFDM carriers are known in the present FPGA training
+    frame.  Guard and DC bins are zeroed here to mirror the hardware path.
+    """
+    rx = np.asarray(rx_grid, dtype=np.complex128)
+    tx = np.asarray(tx_grid, dtype=np.complex128)
+    if rx.shape != tx.shape or rx.ndim != 2 or rx.shape[1] != config.n_fft:
+        raise ValueError("rx_grid and tx_grid must have matching frame shapes")
+    active = config.indices(config.active_bins)
+    if np.any(np.abs(tx[0, active]) < 1e-12):
+        raise ValueError("training symbol must be non-zero on active bins")
+    channel = np.zeros(config.n_fft, dtype=np.complex128)
+    channel[active] = rx[0, active] / tx[0, active]
+    return range_profile(channel)
+
+
 def delay_bin_distance_m(delay_samples: int, bandwidth_hz: float = 20e6) -> float:
     """Two-way radar distance associated with an integer OFDM delay bin."""
     if delay_samples < 0 or bandwidth_hz <= 0.0:
