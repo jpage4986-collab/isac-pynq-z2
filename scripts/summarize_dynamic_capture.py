@@ -15,6 +15,11 @@ def snapshot(path: Path) -> dict[str, int]:
         rows = list(csv.DictReader(stream))
     if len(rows) < 2 or not rows[0]["Sample in Buffer"].startswith("Radix"):
         raise ValueError(f"Invalid Vivado ILA CSV: {path}")
+    for sample in rows[1:]:
+        if int(sample["bit_errors[31:0]"], 16):
+            raise ValueError(f"ILA reported a bit error in {path}")
+        if int(sample["range_frame_valid"], 16) and int(sample["peak_bin[5:0]"], 16) != 5:
+            raise ValueError(f"ILA range peak left bin 5 in {path}")
     row = rows[-1]
     return {
         "bits": int(row["bit_count[31:0]"], 16),
@@ -36,6 +41,7 @@ def main(directory: Path) -> int:
     gates = {(row["gate_i"], row["gate_q"]) for row in rows}
     phase_products = {row["phase_product_q"] for row in rows}
     print(f"board snapshots: {len(rows)}")
+    print("all 12 x 1024 ILA samples: zero bit errors and valid peaks at bin 5")
     print(f"QPSK bits: {rows[0]['bits']}..{rows[-1]['bits']}")
     print(f"bit errors: {sorted({row['errors'] for row in rows})}")
     print(f"range bins: {sorted({row['bin'] for row in rows})}")
