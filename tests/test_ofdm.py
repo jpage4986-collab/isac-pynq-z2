@@ -18,6 +18,9 @@ from model.ofdm import (
     bit_error_rate,
     qpsk_mod,
     vibration_trace,
+    single_target_frequency_response,
+    range_profile,
+    delay_bin_distance_m,
 )
 from model.phase_displacement import displacement_from_phase
 
@@ -77,4 +80,14 @@ def test_training_equalizer_handles_multipath_and_noise() -> None:
     corrected = correct_common_phase(equalized, residual_phase)
     recovered = extract_data_bits(corrected, config)
     assert bit_error_rate(bits, recovered) < 0.01
+
+
+def test_integer_delay_target_has_correct_range_peak() -> None:
+    config = OFDMConfig()
+    response = single_target_frequency_response(5, config, amplitude=0.6, phase_rad=0.3)
+    profile = range_profile(response)
+    assert int(np.argmax(np.abs(profile))) == 5
+    assert np.isclose(np.abs(profile[5]), 0.6)
+    assert np.count_nonzero(np.abs(profile) > 1e-12) == 1
+    assert np.isclose(delay_bin_distance_m(5), 37.47405725)
 

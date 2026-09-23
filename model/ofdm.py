@@ -252,3 +252,35 @@ def bit_error_rate(reference: np.ndarray, estimate: np.ndarray) -> float:
     if a.shape != b.shape or a.ndim != 1:
         raise ValueError("reference and estimate must be matching 1-D arrays")
     return float(np.mean(a != b))
+
+
+def single_target_frequency_response(
+    delay_samples: int,
+    config: OFDMConfig,
+    amplitude: float = 1.0,
+    phase_rad: float = 0.0,
+) -> np.ndarray:
+    """Frequency response of one integer-delay digital reflection."""
+    if not isinstance(delay_samples, (int, np.integer)) or not 0 <= delay_samples < config.cp_len:
+        raise ValueError("delay_samples must be an integer in [0, cp_len)")
+    if amplitude < 0.0 or not np.isfinite(amplitude) or not np.isfinite(phase_rad):
+        raise ValueError("amplitude and phase_rad must be finite, with amplitude non-negative")
+    taps = np.zeros(config.n_fft, dtype=np.complex128)
+    taps[delay_samples] = amplitude * np.exp(1j * phase_rad)
+    return np.fft.fft(taps)
+
+
+def range_profile(channel: np.ndarray) -> np.ndarray:
+    """Convert one FFT-bin channel response into delay/range bins."""
+    response = np.asarray(channel, dtype=np.complex128)
+    if response.ndim != 1 or response.size == 0:
+        raise ValueError("channel must be a non-empty one-dimensional array")
+    return np.fft.ifft(response)
+
+
+def delay_bin_distance_m(delay_samples: int, bandwidth_hz: float = 20e6) -> float:
+    """Two-way radar distance associated with an integer OFDM delay bin."""
+    if delay_samples < 0 or bandwidth_hz <= 0.0:
+        raise ValueError("delay_samples must be non-negative and bandwidth_hz positive")
+    speed_of_light_m_s = 299_792_458.0
+    return delay_samples * speed_of_light_m_s / (2.0 * bandwidth_hz)
