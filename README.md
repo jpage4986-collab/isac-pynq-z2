@@ -2,7 +2,7 @@
 
 面向结构微振动监测的 FPGA OFDM 通感一体化基带验证平台。
 
-当前状态：阶段 16，已在 64 点 IFFT/FFT 与 16 点循环前缀的板内回环上接入交替训练/QPSK 帧、4 个导频和 PL 误码计数器；还可用 [USB-JTAG/ILA 读取四个计数器](docs/jtag-counter-readout.md)。尚未生成 PYNQ Overlay，也未接入数字回波信道、射频或真实振动信号。
+当前状态：阶段 17，已在 64 点 IFFT/FFT 与 16 点循环前缀的板内回环上接入交替训练/QPSK 帧、4 个导频和 PL 误码计数器；可用 [USB-JTAG/ILA 读取四个计数器](docs/jtag-counter-readout.md)。独立的 [5 点数字延迟回波](docs/digital-delay-channel.md) 已通过 RTL、FFT 相位和 PC 距离峰值验证，但尚未接入普通板上通信顶层。尚未生成 PYNQ Overlay，也未接入射频或真实振动信号。
 
 ## 目标
 
@@ -43,6 +43,6 @@ python -m pytest
 
 ## 当前可运行内容
 
-PC 端的 OFDM 黄金模型和相位到位移测试可用 `python -m pytest` 验证。FPGA 端已完成交替训练/QPSK 数据帧的无噪声通信回环，并用 XSim 检查帧尾、定点频点值和 PL 误码统计。ILA 实板采集到 2 个数据帧、192 bit、0 误码。数字信道、带噪声 BER 曲线、信道估计/均衡、PS/DMA 和真实感知仍是后续工作。
+PC 端的 OFDM 黄金模型、整数距离峰值和相位到位移测试可用 `python -m pytest` 验证。FPGA 端已完成交替训练/QPSK 数据帧的无噪声通信回环，并用 XSim 检查帧尾、定点频点值和 PL 误码统计。ILA 实板采集到 2 个数据帧、192 bit、0 误码。5 点数字延迟模块及其 FFT 相位已通过 XSim。带噪声 BER 曲线、PL 信道估计/距离 IFFT、PS/DMA 和真实感知仍是后续工作。
 
 远程仓库：<https://github.com/jpage4986-collab/isac-pynq-z2>
