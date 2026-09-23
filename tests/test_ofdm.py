@@ -20,6 +20,7 @@ from model.ofdm import (
     vibration_trace,
     single_target_frequency_response,
     range_profile,
+    range_profile_from_training,
     delay_bin_distance_m,
 )
 from model.phase_displacement import displacement_from_phase
@@ -91,3 +92,14 @@ def test_integer_delay_target_has_correct_range_peak() -> None:
     assert np.count_nonzero(np.abs(profile) > 1e-12) == 1
     assert np.isclose(delay_bin_distance_m(5), 37.47405725)
 
+
+def test_training_range_profile_detects_delay_with_guard_bins_zeroed() -> None:
+    config = OFDMConfig()
+    bits = np.zeros(config.n_bits_per_frame, dtype=np.uint8)
+    tx_grid = build_tx_frame(bits, config)
+    response = single_target_frequency_response(5, config, amplitude=0.6, phase_rad=0.3)
+    rx_grid = tx_grid * response[None, :]
+    profile = range_profile_from_training(rx_grid, tx_grid, config)
+    assert int(np.argmax(np.abs(profile))) == 5
+    # 52 of 64 range-IFFT inputs contain the measured channel response.
+    assert np.isclose(np.abs(profile[5]), 0.6 * 52.0 / 64.0)
