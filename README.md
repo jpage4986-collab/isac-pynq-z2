@@ -2,7 +2,7 @@
 
 面向结构微振动监测的 FPGA OFDM 通感一体化基带验证平台。
 
-当前状态：阶段 19，已经把交替训练/QPSK 帧、4 个导频、PL 误码统计、`H=Y/X` 信道估计和 64 点距离 IFFT 合并到同一条接收 OFDM 流中。PYNQ-Z2 的 ILA 实测 1024 点显示累计 19,132,076 个 QPSK 比特 0 误码，且全部采样稳定得到第 5 距离格、强度 13318；详见[同链通信与测距验收](docs/integrated-isac.md)。尚未生成 PYNQ Overlay，也未接入射频或真实振动信号。
+当前状态：阶段 20，已在 PYNQ-Z2 实板证明交替训练/QPSK 帧可在同一条接收流完成 0 误码通信和第 5 距离格检测；详见[同链通信与测距验收](docs/integrated-isac.md)。PC 黄金模型又加入可变单/多目标数字回波、4096 点慢时间位移/频谱和带噪声 BER 扫描，详见[数字场景验收](docs/digital-scene-acceptance.md)。动态目标和位移/频谱尚未进入 FPGA；尚未生成 PYNQ Overlay，也未接入射频或真实振动信号。
 
 ## 目标
 
@@ -43,6 +43,6 @@ python -m pytest
 
 ## 当前可运行内容
 
-PC 端的 OFDM 黄金模型、稀疏训练载波距离峰值和同链通信/感知测试可用 `python -m pytest` 验证。FPGA 端的 `isac_integrated_top` 让同一个 5 点数字回波同时服务通信和测距：XSim 检查到 96 bit、0 误码、第 5 距离格和强度 13318；PYNQ-Z2 的 ILA 实测到 19,132,076 bit、0 误码，1024 个样本均保持第 5 格和强度 13318。带 ILA bitstream 在 125 MHz 的建立时间裕量为 0.249 ns。带噪声 BER 曲线、目标门后的相位振动、PS/DMA 和真实感知仍是后续工作。
+PC 端的 OFDM 黄金模型、稀疏训练载波距离峰值、可变单/多目标数字场景和带噪声 BER 扫描可用 `python -m pytest` 与 `scripts/report_digital_scene.py` 验证。FPGA 端的 `isac_integrated_top` 让同一个固定 5 点数字回波同时服务通信和测距：XSim 检查到 96 bit、0 误码、第 5 距离格和强度 13318；PYNQ-Z2 的 ILA 实测到 19,132,076 bit、0 误码，1024 个样本均保持第 5 格和强度 13318。带 ILA bitstream 在 125 MHz 的建立时间裕量为 0.249 ns。FPGA 动态目标、目标门后的相位/位移/频谱、PS/DMA 和真实感知仍是后续工作。
 
 远程仓库：<https://github.com/jpage4986-collab/isac-pynq-z2>
