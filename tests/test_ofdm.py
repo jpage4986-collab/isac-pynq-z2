@@ -103,3 +103,18 @@ def test_training_range_profile_detects_delay_with_guard_bins_zeroed() -> None:
     assert int(np.argmax(np.abs(profile))) == 5
     # 52 of 64 range-IFFT inputs contain the measured channel response.
     assert np.isclose(np.abs(profile[5]), 0.6 * 52.0 / 64.0)
+
+
+def test_shared_training_channel_equalizes_qpsk_and_reports_range() -> None:
+    """One delayed channel serves both the QPSK and sensing reference paths."""
+    config = OFDMConfig(n_data_symbols=4)
+    rng = np.random.default_rng(20260923)
+    bits = rng.integers(0, 2, config.n_bits_per_frame, dtype=np.uint8)
+    tx_grid = build_tx_frame(bits, config)
+    response = single_target_frequency_response(5, config)
+    rx_grid = tx_grid * response[None, :]
+    channel = estimate_channel_from_training(rx_grid, tx_grid, config)
+    recovered = extract_data_bits(equalize_frequency_response(rx_grid, channel), config)
+    profile = range_profile_from_training(rx_grid, tx_grid, config)
+    assert bit_error_rate(bits, recovered) == 0.0
+    assert int(np.argmax(np.abs(profile))) == 5
