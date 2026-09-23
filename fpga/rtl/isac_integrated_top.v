@@ -1,9 +1,11 @@
 `timescale 1ns/1ps
 
-// Integrated communication-and-sensing baseline. One alternating training /
-// QPSK OFDM stream crosses the same 5-sample digital target. The receiver
-// equalizes it for BER while its training frames also form a range profile.
-module isac_integrated_top (
+// One alternating training/QPSK stream crosses the same 5-sample digital
+// target. A frame-aligned 100 Hz phasor adds structural micro-vibration.
+module isac_integrated_top #(
+    parameter integer SLOW_DIV = 1250000,
+    parameter [31:0] PHASE_STEP = 32'd103079215
+) (
     input  wire clk,
     input  wire btn0,
     output wire led0,
@@ -37,6 +39,8 @@ module isac_integrated_top (
     wire signed [15:0] h_i, h_q;
     wire range_valid, range_last;
     wire signed [15:0] range_i, range_q;
+    wire signed [15:0] channel_cos_q14, channel_sin_q14;
+    (* mark_debug = "true" *) wire slow_sample_tick;
     wire frame_seen, data_frame_seen, last_frame_ok, sticky_error;
     (* mark_debug = "true" *) wire [31:0] frame_count;
     (* mark_debug = "true" *) wire [31:0] data_frame_count;
@@ -45,6 +49,13 @@ module isac_integrated_top (
     (* mark_debug = "true" *) wire range_frame_valid;
     (* mark_debug = "true" *) wire [5:0] peak_bin;
     (* mark_debug = "true" *) wire [16:0] peak_magnitude;
+    (* mark_debug = "true" *) wire gate_valid;
+    (* mark_debug = "true" *) wire signed [15:0] gate_i, gate_q;
+    (* mark_debug = "true" *) wire slow_valid;
+    (* mark_debug = "true" *) wire signed [15:0] slow_i, slow_q;
+    (* mark_debug = "true" *) wire [31:0] slow_sample_count;
+    (* mark_debug = "true" *) wire phase_product_valid;
+    (* mark_debug = "true" *) wire signed [32:0] phase_product_i, phase_product_q;
     wire range_ok = range_frame_valid && (peak_bin == 6'd5) &&
                     (peak_magnitude >= 17'd8000);
 
@@ -71,13 +82,18 @@ module isac_integrated_top (
         .m_axis_tvalid(delayed_valid), .m_axis_tlast(delayed_last),
         .m_axis_i(delayed_i), .m_axis_q(delayed_q)
     );
-    // Static phasor in this integration baseline; the slow-time vibration
-    // phase source is added on top of this shared channel in the next stage.
+    vibration_phasor_q14 #(.SLOW_DIV(SLOW_DIV), .PHASE_STEP(PHASE_STEP))
+        u_vibration_phasor (
+        .clk(clk), .rst(rst),
+        .frame_boundary(delayed_valid && delayed_ready && delayed_last),
+        .sample_tick(slow_sample_tick),
+        .cos_q14(channel_cos_q14), .sin_q14(channel_sin_q14)
+    );
     axis_complex_rotator u_channel_gain (
         .clk(clk), .rst(rst), .s_axis_tvalid(delayed_valid),
         .s_axis_tready(delayed_ready), .s_axis_tlast(delayed_last),
         .s_axis_i(delayed_i), .s_axis_q(delayed_q),
-        .cos_q14(16'sd16384), .sin_q14(16'sd0),
+        .cos_q14(channel_cos_q14), .sin_q14(channel_sin_q14),
         .m_axis_tready(channel_ready), .m_axis_tvalid(channel_valid),
         .m_axis_tlast(channel_last), .m_axis_i(channel_i), .m_axis_q(channel_q)
     );
@@ -130,6 +146,23 @@ module isac_integrated_top (
         .clk(clk), .rst(rst), .s_valid(range_valid), .s_last(range_last),
         .s_i(range_i), .s_q(range_q), .frame_valid(range_frame_valid),
         .last_peak_bin(peak_bin), .last_peak_magnitude(peak_magnitude)
+    );
+    range_gate_sampler #(.GATE_BIN(6'd5)) u_target_gate (
+        .clk(clk), .rst(rst), .s_valid(range_valid), .s_last(range_last),
+        .s_i(range_i), .s_q(range_q), .gate_valid(gate_valid),
+        .gate_i(gate_i), .gate_q(gate_q)
+    );
+    slow_time_sampler u_slow_sampler (
+        .clk(clk), .rst(rst), .sample_tick(slow_sample_tick),
+        .gate_valid(gate_valid), .gate_i(gate_i), .gate_q(gate_q),
+        .slow_valid(slow_valid), .slow_i(slow_i), .slow_q(slow_q),
+        .sample_count(slow_sample_count)
+    );
+    slow_phase_product u_phase_product (
+        .clk(clk), .rst(rst), .slow_valid(slow_valid),
+        .slow_i(slow_i), .slow_q(slow_q),
+        .product_valid(phase_product_valid),
+        .product_i(phase_product_i), .product_q(phase_product_q)
     );
 
     always @(posedge clk) begin

@@ -4,7 +4,7 @@ set build_root [file normalize [file join $repo_root .. build pynq_z2_integrated
 file mkdir $build_root
 
 create_project pynq_z2_integrated_demo $build_root -part xc7z020clg400-1 -force
-foreach name {isac_integrated_top ofdm_frame_source ofdm_frame_checker digital_delay_channel_axis axis_complex_rotator delay5_equalizer_axis ofdm_training_broadcaster training_channel_estimator_axis range_peak_detector cp_insert_axis cp_remove_axis fft64_axis_wrapper} {
+foreach name {isac_integrated_top ofdm_frame_source ofdm_frame_checker digital_delay_channel_axis axis_complex_rotator vibration_phasor_q14 delay5_equalizer_axis ofdm_training_broadcaster training_channel_estimator_axis range_peak_detector range_gate_sampler slow_time_sampler slow_phase_product cp_insert_axis cp_remove_axis fft64_axis_wrapper} {
     add_files [file join $repo_root fpga rtl ${name}.v]
 }
 create_ip -name xfft -vendor xilinx.com -library ip -version 9.1 -module_name xfft_64

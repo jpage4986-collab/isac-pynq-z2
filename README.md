@@ -2,7 +2,7 @@
 
 面向结构微振动监测的 FPGA OFDM 通感一体化基带验证平台。
 
-当前状态：阶段 20，已在 PYNQ-Z2 实板证明交替训练/QPSK 帧可在同一条接收流完成 0 误码通信和第 5 距离格检测；详见[同链通信与测距验收](docs/integrated-isac.md)。PC 黄金模型又加入可变单/多目标数字回波、4096 点慢时间位移/频谱和带噪声 BER 扫描，详见[数字场景验收](docs/digital-scene-acceptance.md)。动态目标和位移/频谱尚未进入 FPGA；尚未生成 PYNQ Overlay，也未接入射频或真实振动信号。
+当前状态：阶段 21。PYNQ-Z2 已实板证明同链 QPSK 零误码与第 5 距离格检测，并进一步实测单目标帧对齐微振动相位、距离门 IQ 和慢时间相位差随时间变化；详见[动态链验收记录](docs/dynamic-vibration-board.md)。PC 黄金模型具备可变单/多目标、4096 点慢时间位移/频谱和带噪声 BER 扫描。FPGA 的 4096 点位移/频谱与多目标链、PYNQ Overlay、射频和真实振动信号尚未完成。
 
 ## 目标
 
@@ -31,7 +31,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 python -m pytest
 ```
 
-当前 Vivado 2024.1 安装在 `D:\pynqz2\tools\Vivado\2024.1\Vivado\2024.1`。`scripts/build_pynq_z2.tcl` 可从 RTL 重建普通通信 bitstream，`scripts/program_pynq_z2.tcl` 可通过 JTAG 下载到已连接的板。`scripts/build_integrated_demo.tcl` 与 `scripts/program_integrated_demo.tcl` 构建并下载同链通信/测距演示；要复现实板证据，运行 `scripts/build_integrated_demo_jtag.tcl`、`scripts/capture_integrated_demo_jtag.tcl` 和 `scripts/summarize_integrated_capture.py`。
+当前 Vivado 2024.1 安装在 `D:\pynqz2\tools\Vivado\2024.1\Vivado\2024.1`。`scripts/build_pynq_z2.tcl` 可从 RTL 重建普通通信 bitstream，`scripts/program_pynq_z2.tcl` 可通过 JTAG 下载到已连接的板。动态目标的仿真、构建和待供电恢复后的采集步骤见[板内微振动相位链](docs/dynamic-vibration-board.md)。
 
 ## 接力规则
 
@@ -43,6 +43,6 @@ python -m pytest
 
 ## 当前可运行内容
 
-PC 端的 OFDM 黄金模型、稀疏训练载波距离峰值、可变单/多目标数字场景和带噪声 BER 扫描可用 `python -m pytest` 与 `scripts/report_digital_scene.py` 验证。FPGA 端的 `isac_integrated_top` 让同一个固定 5 点数字回波同时服务通信和测距：XSim 检查到 96 bit、0 误码、第 5 距离格和强度 13318；PYNQ-Z2 的 ILA 实测到 19,132,076 bit、0 误码，1024 个样本均保持第 5 格和强度 13318。带 ILA bitstream 在 125 MHz 的建立时间裕量为 0.249 ns。FPGA 动态目标、目标门后的相位/位移/频谱、PS/DMA 和真实感知仍是后续工作。
+PC 端的 OFDM 黄金模型、可变单/多目标数字场景和带噪声 BER 扫描可用 `python -m pytest` 与 `scripts/report_digital_scene.py` 验证。新版 FPGA 数字微振动链在 XSim 中记录 5 个慢时间样本、1152 bit 零错误；4096 点 RTL 相位样本的 2.4 Hz/500 µm 参数吻合，125 MHz 带 ILA bitstream 的 WNS 为 +0.457 ns。PYNQ-Z2 实板 12 份分时 ILA 快照验证了 0 误码、第 5 格峰值、慢时间计数递增和目标门相位变化；完整板端 4096 点位移/频谱、多目标、PS/DMA 和真实感知仍是后续工作。
 
 远程仓库：<https://github.com/jpage4986-collab/isac-pynq-z2>

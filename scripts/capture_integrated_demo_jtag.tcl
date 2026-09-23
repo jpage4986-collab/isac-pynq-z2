@@ -25,3 +25,16 @@ wait_on_hw_ila -timeout 0.5 $ila
 set data [upload_hw_ila_data $ila]
 write_hw_ila_data -force -csv_file $csv $data
 puts "CAPTURE_CSV=$csv"
+
+# A 1024-cycle ILA window is only 8.2 us at 125 MHz, while the structural
+# vibration is sampled at 100 Hz. Take spaced snapshots so the slow sample
+# counter and target-gate phase can be observed on the actual board.
+for {set index 0} {$index < 12} {incr index} {
+    after 100
+    run_hw_ila -trigger_now $ila
+    wait_on_hw_ila -timeout 0.5 $ila
+    set data [upload_hw_ila_data $ila]
+    set spaced_csv [file join $build_root [format {integrated_slow_%02d.csv} $index]]
+    write_hw_ila_data -force -csv_file $spaced_csv $data
+    puts "SLOW_CAPTURE_CSV=$spaced_csv"
+}
