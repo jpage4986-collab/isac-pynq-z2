@@ -21,6 +21,10 @@
 - `docs/`：接口、定点、实验和交接文档
 - `handoff/`：三人接力记录
 
+## FPGA 入门例程
+
+第一次在 PYNQ-Z2 上练习 Verilog、Vivado 约束和 JTAG 下载，可从 [LED 闪烁例程](fpga/examples/led_blink/README.md)开始。它用于熟悉 PL 开发流程，不属于 OFDM/ISAC 数据链，也不实现 PYNQ Overlay、AXI-Lite 或 DMA。
+
 ## Windows 快速开始
 
 ```powershell
